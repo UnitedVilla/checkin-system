@@ -2,24 +2,23 @@
   "name": "checkin-web",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20 <21" },
+  "engines": {
+    "node": ">=20 <21"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
   },
   "dependencies": {
-    "firebase": "^10.13.2",
-    "framer-motion": "^11.1.7",
     "next": "14.2.5",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "dayjs": "^1.11.11"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.39",
+    "typescript": "^5.5.4",
     "tailwindcss": "^3.4.7",
-    "typescript": "^5.5.4"
+    "postcss": "^8.4.39",
+    "autoprefixer": "^10.4.19"
   }
 }
