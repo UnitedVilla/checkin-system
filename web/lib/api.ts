@@ -1,0 +1,4 @@
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE;
+export async function searchReservation(payload){ const r=await fetch(`${API_BASE}/searchReservation`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); if(!r.ok) throw new Error('検索に失敗'); return r.json(); }
+export async function startCheckin(payload){ const r=await fetch(`${API_BASE}/startCheckin`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); if(!r.ok) throw new Error('開始に失敗'); return r.json(); }
+export async function uploadPhotosComplete(payload){ const r=await fetch(`${API_BASE}/uploadPhotos`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); if(!r.ok) throw new Error('完了に失敗'); return r.json(); }

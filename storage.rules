@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /checkins/{sessionId}/{filename} {
+      allow write: if isValidImage() && sessionActive(sessionId);
+      allow read: if false;
+      function sessionActive(sessionId) {
+        return exists(/databases/$(database)/documents/checkinSessions/$(sessionId))
+          && get(/databases/$(database)/documents/checkinSessions/$(sessionId)).data.expiresAt > request.time;
+      }
+      function isValidImage() {
+        return request.resource.size < 8 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+      }
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}
