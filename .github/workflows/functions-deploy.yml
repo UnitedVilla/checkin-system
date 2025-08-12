@@ -52,5 +52,11 @@ jobs:
         working-directory: functions
         run: npm run build
 
-      - name: Deploy Functions
-        run: firebase deploy --only functions --project online-check-in-23087
+      # - name: Deploy Functions
+      #   run: firebase deploy --only functions --project online-check-in-23087
+      - name: Deploy Functions (debug)
+        run: firebase deploy --only functions --project online-check-in-23087 --debug
+      - name: Sanity check: load compiled module
+      working-directory: functions
+      run: node -e "import('./lib/index.js').then(m=>console.log('exports:',Object.keys(m))).catch(e=>{console.error('IMPORT_ERR:',e);process.exit(1)})"
+
