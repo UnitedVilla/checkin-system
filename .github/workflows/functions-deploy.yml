@@ -1,0 +1,47 @@
+name: Deploy Firebase Functions (prod)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+      - 'firebase.json'
+      - '.github/workflows/functions-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: functions-deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # 将来WIFに移行する際にも必要
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Google Cloud に認証（サービスアカウント JSON を使う）
+      - name: Auth to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Install Firebase CLI
+        run: npm i -g firebase-tools
+
+      - name: Install deps (functions)
+        working-directory: functions
+        run: npm ci || npm install
+
+      - name: Build (functions)
+        working-directory: functions
+        run: npm run build
+
+      - name: Deploy Functions
+        run: firebase deploy --only functions --project online-check-in-23087
