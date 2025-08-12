@@ -266,3 +266,4 @@ export const api = onRequest(
   { region: "asia-northeast1", memory: "256MiB", cors: false },
   (req, res) => cors(req as any, res as any, () => handler(req, res))
 );
+
