@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write   # 将来WIFに移行する際にも必要
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +26,6 @@ jobs:
         with:
           node-version: '20'
 
-      # Google Cloud に認証（サービスアカウント JSON を使う）
       - name: Auth to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -38,6 +37,16 @@ jobs:
       - name: Install deps (functions)
         working-directory: functions
         run: npm ci || npm install
+
+      # ▼ ここが追加：Secretsから .env を生成（functions/ 配下）
+      - name: Create .env for Functions
+        working-directory: functions
+        shell: bash
+        run: |
+          {
+            echo "ADMIN_KEY=${{ secrets.ADMIN_KEY }}";
+            echo "APP_ALLOWED_ORIGINS=${{ secrets.APP_ALLOWED_ORIGINS }}";
+          } > .env
 
       - name: Build (functions)
         working-directory: functions
