@@ -33,6 +33,15 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: online-check-in-23087
+
+      - name: Enable required APIs (explicit)
+        run: |
+          gcloud services enable firebaseextensions.googleapis.com
 
       - name: Install Firebase CLI
         run: npm i -g firebase-tools@13
