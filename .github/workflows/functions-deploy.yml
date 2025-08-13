@@ -81,4 +81,3 @@ jobs:
 
       - name: Deploy Functions (debug)
         run: firebase deploy --only functions --project online-check-in-23087 --non-interactive --debug
-        
