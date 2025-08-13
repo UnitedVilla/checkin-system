@@ -130,10 +130,14 @@ async function handler(req: any, res: any) {
         expectedUploads: expectedUploads,
       });
 
+      // ★ 追加：sessionId を UID として Custom Token を発行
+      const customToken = await admin.auth().createCustomToken(sessionRef.id);
+
       res.status(200).json({
         sessionId: sessionRef.id,
         expectedUploads: expectedUploads,
         uploadBasePath: "checkins/" + sessionRef.id + "/",
+        customToken, // ← フロントはこれで匿名ログイン
       });
       return;
     }
