@@ -19,26 +19,29 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Auth to Google Cloud
+      - name: Auth to Google Cloud (Service Account)
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Install Firebase CLI
-        run: npm i -g firebase-tools
+        run: npm i -g firebase-tools@13
 
       - name: Install deps (functions)
         working-directory: functions
         run: npm ci || npm install
 
-      # ▼ ここが追加：Secretsから .env を生成（functions/ 配下）
+      # Functions の実行時環境変数を .env で渡す（初回デプロイ前でもOK）
       - name: Create .env for Functions
         working-directory: functions
         shell: bash
@@ -50,13 +53,15 @@ jobs:
 
       - name: Build (functions)
         working-directory: functions
-        run: npm run build
+        run: |
+          npm run build
+          test -f lib/index.js && echo "Built: lib/index.js exists"
 
-      # - name: Deploy Functions
-      #   run: firebase deploy --only functions --project online-check-in-23087
+      # 解析エラー切り分け用：コンパイル済みモジュールを CJS として読み込み確認
+      - name: Sanity check compiled module
+        working-directory: functions
+        run: |
+          node -e "const m=require('./lib/index.js'); console.log('exports:', Object.keys(m)); if(!('api' in m)){ console.error('Export \"api\" not found'); process.exit(2); }"
+
       - name: Deploy Functions (debug)
-        run: firebase deploy --only functions --project online-check-in-23087 --debug
-      - name: Sanity check: load compiled module
-      working-directory: functions
-      run: node -e "import('./lib/index.js').then(m=>console.log('exports:',Object.keys(m))).catch(e=>{console.error('IMPORT_ERR:',e);process.exit(1)})"
-
+        run: firebase deploy --only functions --project online-check-in-23087 --non-interactive --debug
