@@ -41,7 +41,6 @@ jobs:
         working-directory: functions
         run: npm ci || npm install
 
-      # Functions の実行時環境変数を .env で渡す（初回デプロイ前でもOK）
       - name: Create .env for Functions
         working-directory: functions
         shell: bash
@@ -57,7 +56,15 @@ jobs:
           npm run build
           test -f lib/index.js && echo "Built: lib/index.js exists"
 
-      # 解析エラー切り分け用：コンパイル済みモジュールを CJS として読み込み確認
+      # ★ 追加：firebase-functions バイナリに実行権限を付与（EACCES対策）
+      - name: Fix exec permission for firebase-functions analyzer
+        working-directory: functions
+        run: |
+          ls -l node_modules/.bin || true
+          chmod +x node_modules/.bin/firebase-functions || true
+          ls -l node_modules/.bin/firebase-functions || true
+
+      # 解析前にモジュールが読めるか sanity check（CJS想定）
       - name: Sanity check compiled module
         working-directory: functions
         run: |

@@ -1,11 +1,11 @@
 {
   "name": "checkin-functions",
   "private": true,
-  "type": "module",
   "engines": { "node": ">=20" },
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "predeploy": "npm --prefix \"$RESOURCE_DIR\" run build"
   },
   "dependencies": {
     "firebase-admin": "^12.5.0",
