@@ -1,0 +1,19 @@
+﻿# common
+node_modules/
+*.log
+*.log.*
+.DS_Store
+Thumbs.db
+
+# web app
+web/.next/
+web/node_modules/
+web/out/
+web/.env*
+web/.vercel/
+
+# firebase functions
+functions/node_modules/
+functions/lib/
+functions/.env*
+
