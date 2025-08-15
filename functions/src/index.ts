@@ -17,23 +17,23 @@ const ALLOWED_ORIGINS = (process.env.APP_ALLOWED_ORIGINS || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-// --- Origin 許可ロジック（完全一致 + ワイルドカード *.example.com 対応）---
+// --- Origin 許可（完全一致 + ワイルドカード *.example.com）---
 function isAllowedOrigin(origin: string): boolean {
-  if (ALLOWED_ORIGINS.length === 0) return true; // 未設定なら許可（開発向け）
+  if (ALLOWED_ORIGINS.length === 0) return true;
   return ALLOWED_ORIGINS.some((rule) => {
     if (rule === origin) return true;
     if (rule.startsWith("*.")) {
-      const suffix = rule.slice(1); // ".vercel.app" など
+      const suffix = rule.slice(1);
       return origin.endsWith(suffix);
     }
     return false;
   });
 }
 
-// --- CORS ミドルウェア ---
+// --- CORS ---
 const cors = corsLib({
   origin(origin, cb) {
-    if (!origin) return cb(null, true); // 同一オリジン/curl等は許可
+    if (!origin) return cb(null, true);
     if (isAllowedOrigin(origin)) return cb(null, true);
     cb(new Error(`CORS not allowed: ${origin}`));
   },
@@ -47,27 +47,42 @@ const cors = corsLib({
 function normalizeName(s: string): string {
   return (s || "").toLowerCase().normalize("NFKC").replace(/\s+/g, " ").trim();
 }
-function dateOnly(v: string): string {
-  const m = (v || "").match(/\d{4}-\d{2}-\d{2}/);
-  return m ? m[0] : v;
+
+/** 受け取った文字列から日付を抽出し YYYY-MM-DD に正規化。
+ * 例: 2025/8/6, 2025-08-06, 2025-8-6 → 2025-08-06
+ */
+function normalizeDate(v: string): string {
+  if (!v) return v;
+  // まず "YYYY-MM-DD" を優先抽出
+  let m = v.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (!m) {
+    // 次に "YYYY/MM/DD"
+    m = v.match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  }
+  if (!m) return v;
+  const y = Number(m[1]);
+  const mo = String(Number(m[2])).padStart(2, "0");
+  const d = String(Number(m[3])).padStart(2, "0");
+  return `${y}-${mo}-${d}`;
 }
+
 function setJson(res: any) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Vary", "Origin"); // CORSキャッシュ安全化
+  res.setHeader("Vary", "Origin");
 }
 
 // --- 入力スキーマ ---
 const SearchSchema = z
   .object({
-    date: z.string().min(10),
+    date: z.string().min(4),
     name: z.string().min(1).optional(),
     guestName: z.string().min(1).optional(),
     guestCount: z.number().int().min(1).optional(),
   })
   .refine((v) => !!(v.name || v.guestName), { message: "name required" })
   .transform((v) => ({
-    date: v.date,
-    name: (v.name ?? v.guestName)!,
+    date: normalizeDate(v.date),
+    name: normalizeName((v.name ?? v.guestName)!),
     guestCount: v.guestCount,
   }));
 
@@ -82,7 +97,7 @@ const SyncSchema = z.object({
   records: z
     .array(
       z.object({
-        date: z.string().min(10),
+        date: z.string().min(4),
         roomNumber: z.string().min(1),
         guestName: z.string().min(1),
         guestCount: z.union([z.number().int().min(1), z.string()]),
@@ -94,7 +109,6 @@ const SyncSchema = z.object({
 
 // --- ルーティング本体 ---
 async function handler(req: any, res: any) {
-  // Preflight（CORS ミドルウェアが 204 を返すので通常ここに来ないが念のため）
   if (req.method === "OPTIONS") {
     res.status(204).end();
     return;
@@ -113,15 +127,18 @@ async function handler(req: any, res: any) {
     // 1) 予約照合
     if (path.endsWith("/searchReservation") && req.method === "POST") {
       const p = SearchSchema.parse(req.body || {});
+      logger.info("searchReservation", { date: p.date, name: p.name });
+
       const q = await db
         .collection("reservations")
-        .where("date", "==", dateOnly(p.date))
+        .where("date", "==", p.date)
         .get();
 
-      const n = normalizeName(p.name);
       const rows = q.docs
         .map((d) => ({ id: d.id, ...(d.data() as any) }))
-        .filter((r) => String(r.searchKey || "").includes(n));
+        .filter((r) => String(r.searchKey || "").includes(p.name));
+
+      logger.info("searchReservationResult", { total: q.size, matched: rows.length });
 
       res.status(200).json({
         matches: rows.slice(0, 10).map((r) => ({
@@ -164,7 +181,6 @@ async function handler(req: any, res: any) {
         expectedUploads,
       });
 
-      // sessionId を UID として Custom Token を発行
       const customToken = await admin.auth().createCustomToken(sessionRef.id);
 
       res.status(200).json({
@@ -194,14 +210,12 @@ async function handler(req: any, res: any) {
         return;
       }
 
-      // パス検証
       const okPrefix = uploadedPaths.every((p: string) => p.startsWith(`checkins/${sessionId}/`));
       if (!okPrefix) {
         res.status(400).json({ error: "invalid_paths" });
         return;
       }
 
-      // Storage に存在確認
       const bucket = storage.bucket();
       let okCount = 0;
       for (const p of uploadedPaths) {
@@ -214,7 +228,6 @@ async function handler(req: any, res: any) {
         return;
       }
 
-      // 予約更新
       const rRef = db.collection("reservations").doc(String(s.reservationId));
       const rSnap = await rRef.get();
       if (!rSnap.exists) {
@@ -246,7 +259,7 @@ async function handler(req: any, res: any) {
       const nowServer = admin.firestore.FieldValue.serverTimestamp();
 
       for (const rec of records) {
-        const dateStr = dateOnly(rec.date);
+        const dateStr = normalizeDate(rec.date);
         const guestCountNum = Number(rec.guestCount);
         const searchKey = normalizeName(rec.guestName);
 
@@ -278,7 +291,6 @@ async function handler(req: any, res: any) {
       return;
     }
 
-    // 未定義パス
     res.status(404).json({ error: "not_found" });
   } catch (e: any) {
     logger.error(e);
@@ -286,7 +298,7 @@ async function handler(req: any, res: any) {
   }
 }
 
-// --- エクスポート（CORS を最初に通す）---
+// --- エクスポート ---
 export const api = onRequest(
   { region: "asia-northeast1", memory: "256MiB", cors: false },
   (req, res) => cors(req as any, res as any, () => handler(req, res))
