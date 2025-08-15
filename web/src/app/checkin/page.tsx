@@ -1,106 +1,106 @@
-// 'use client';
-// export default function CheckinPage() {
-//   return <main style={{ padding: 16 }}>チェックイン画面（仮）</main>;
-// }
-
 'use client';
-import { useState } from 'react';
-import { auth, storage } from '@/lib/firebase';
-import { signInWithCustomToken } from 'firebase/auth';
-import { ref, uploadBytes } from 'firebase/storage';
-
-const API = process.env.NEXT_PUBLIC_API_BASE!;
-
 export default function CheckinPage() {
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0,10));
-  const [name, setName] = useState('');
-  const [reservationId, setReservationId] = useState('');
-  const [session, setSession] = useState<{sessionId:string; uploadBasePath:string; expectedUploads:number; customToken:string} | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
-  const [result, setResult] = useState<any>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function search() {
-    setBusy(true);
-    const res = await fetch(`${API}/searchReservation`, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ date, name })
-    });
-    const json = await res.json();
-    const m = json.matches?.[0];
-    if (!m) { alert('予約が見つかりません'); setBusy(false); return; }
-    setReservationId(m.reservationId);
-    setBusy(false);
-  }
-
-  async function start() {
-    if (!reservationId) return alert('先に予約照合してください');
-    setBusy(true);
-    const res = await fetch(`${API}/startCheckin`, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ reservationId })
-    });
-    const s = await res.json();
-    if (!s.sessionId || !s.customToken) { alert('開始に失敗'); setBusy(false); return; }
-    await signInWithCustomToken(auth, s.customToken); // uid=sessionId で一時ログイン
-    setSession(s);
-    setBusy(false);
-  }
-
-  async function upload() {
-    if (!session) return;
-    setBusy(true);
-    const chosen = files.slice(0, Math.max(2, files.length));
-    const uploadedPaths:string[] = [];
-    for (let i=0; i<chosen.length; i++) {
-      const f = chosen[i];
-      const name = i===0 ? 'face-1.jpg' : 'passport-1.jpg';
-      const path = `${session.uploadBasePath}${name}`;
-      const r = ref(storage, path);
-      await uploadBytes(r, f);
-      uploadedPaths.push(path);
-    }
-    const res2 = await fetch(`${API}/uploadPhotos`, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ sessionId: session.sessionId, uploadedPaths })
-    });
-    const json2 = await res2.json();
-    setResult(json2);
-    setBusy(false);
-  }
-
-  return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-xl font-bold">オンラインチェックイン</h1>
-
-      <section className="space-y-2">
-        <label className="block">チェックイン日</label>
-        <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="border p-2 rounded" />
-        <label className="block">お名前</label>
-        <input value={name} onChange={e=>setName(e.target.value)} className="border p-2 rounded" placeholder="Taro Yamada" />
-        <button disabled={busy} onClick={search} className="px-3 py-2 bg-black text-white rounded">予約照合</button>
-        {reservationId && <div className="text-green-700">予約ID: {reservationId}</div>}
-      </section>
-
-      <section className="space-y-2">
-        <button disabled={!reservationId || busy} onClick={start} className="px-3 py-2 bg-indigo-600 text-white rounded">チェックイン開始</button>
-        {!!session && <div className="text-green-700">セッション: {session.sessionId}</div>}
-      </section>
-
-      <section className="space-y-2">
-        <input type="file" accept="image/*" multiple capture="environment" onChange={e=>setFiles(Array.from(e.target.files||[]))} />
-        <button disabled={!session || files.length===0 || busy} onClick={upload} className="px-3 py-2 bg-emerald-600 text-white rounded">アップロードして完了</button>
-      </section>
-
-      {result && (
-        <section className="p-4 border rounded">
-          <div className="font-semibold">結果</div>
-          <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(result, null, 2)}</pre>
-        </section>
-      )}
-    </main>
-  );
+  return <main style={{ padding: 16 }}>チェックイン画面（仮）</main>;
 }
+
+// 'use client';
+// import { useState } from 'react';
+// import { auth, storage } from '@/lib/firebase';
+// import { signInWithCustomToken } from 'firebase/auth';
+// import { ref, uploadBytes } from 'firebase/storage';
+
+// const API = process.env.NEXT_PUBLIC_API_BASE!;
+
+// export default function CheckinPage() {
+//   const [date, setDate] = useState(() => new Date().toISOString().slice(0,10));
+//   const [name, setName] = useState('');
+//   const [reservationId, setReservationId] = useState('');
+//   const [session, setSession] = useState<{sessionId:string; uploadBasePath:string; expectedUploads:number; customToken:string} | null>(null);
+//   const [files, setFiles] = useState<File[]>([]);
+//   const [result, setResult] = useState<any>(null);
+//   const [busy, setBusy] = useState(false);
+
+//   async function search() {
+//     setBusy(true);
+//     const res = await fetch(`${API}/searchReservation`, {
+//       method: 'POST', headers: {'Content-Type':'application/json'},
+//       body: JSON.stringify({ date, name })
+//     });
+//     const json = await res.json();
+//     const m = json.matches?.[0];
+//     if (!m) { alert('予約が見つかりません'); setBusy(false); return; }
+//     setReservationId(m.reservationId);
+//     setBusy(false);
+//   }
+
+//   async function start() {
+//     if (!reservationId) return alert('先に予約照合してください');
+//     setBusy(true);
+//     const res = await fetch(`${API}/startCheckin`, {
+//       method: 'POST', headers: {'Content-Type':'application/json'},
+//       body: JSON.stringify({ reservationId })
+//     });
+//     const s = await res.json();
+//     if (!s.sessionId || !s.customToken) { alert('開始に失敗'); setBusy(false); return; }
+//     await signInWithCustomToken(auth, s.customToken); // uid=sessionId で一時ログイン
+//     setSession(s);
+//     setBusy(false);
+//   }
+
+//   async function upload() {
+//     if (!session) return;
+//     setBusy(true);
+//     const chosen = files.slice(0, Math.max(2, files.length));
+//     const uploadedPaths:string[] = [];
+//     for (let i=0; i<chosen.length; i++) {
+//       const f = chosen[i];
+//       const name = i===0 ? 'face-1.jpg' : 'passport-1.jpg';
+//       const path = `${session.uploadBasePath}${name}`;
+//       const r = ref(storage, path);
+//       await uploadBytes(r, f);
+//       uploadedPaths.push(path);
+//     }
+//     const res2 = await fetch(`${API}/uploadPhotos`, {
+//       method: 'POST', headers: {'Content-Type':'application/json'},
+//       body: JSON.stringify({ sessionId: session.sessionId, uploadedPaths })
+//     });
+//     const json2 = await res2.json();
+//     setResult(json2);
+//     setBusy(false);
+//   }
+
+//   return (
+//     <main className="p-6 space-y-4">
+//       <h1 className="text-xl font-bold">オンラインチェックイン</h1>
+
+//       <section className="space-y-2">
+//         <label className="block">チェックイン日</label>
+//         <input type="date" value={date} onChange={e=>setDate(e.target.value)} className="border p-2 rounded" />
+//         <label className="block">お名前</label>
+//         <input value={name} onChange={e=>setName(e.target.value)} className="border p-2 rounded" placeholder="Taro Yamada" />
+//         <button disabled={busy} onClick={search} className="px-3 py-2 bg-black text-white rounded">予約照合</button>
+//         {reservationId && <div className="text-green-700">予約ID: {reservationId}</div>}
+//       </section>
+
+//       <section className="space-y-2">
+//         <button disabled={!reservationId || busy} onClick={start} className="px-3 py-2 bg-indigo-600 text-white rounded">チェックイン開始</button>
+//         {!!session && <div className="text-green-700">セッション: {session.sessionId}</div>}
+//       </section>
+
+//       <section className="space-y-2">
+//         <input type="file" accept="image/*" multiple capture="environment" onChange={e=>setFiles(Array.from(e.target.files||[]))} />
+//         <button disabled={!session || files.length===0 || busy} onClick={upload} className="px-3 py-2 bg-emerald-600 text-white rounded">アップロードして完了</button>
+//       </section>
+
+//       {result && (
+//         <section className="p-4 border rounded">
+//           <div className="font-semibold">結果</div>
+//           <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(result, null, 2)}</pre>
+//         </section>
+//       )}
+//     </main>
+//   );
+// }
 
 
 // //過去のページ
