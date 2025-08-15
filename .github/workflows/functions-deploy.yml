@@ -3,11 +3,11 @@ name: Deploy Firebase Functions (prod)
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'functions/**'
-      - 'firebase.json'
-      - '.github/workflows/functions-deploy.yml'
-  workflow_dispatch:
+    # paths:
+    #   - 'functions/**'
+    #   - 'firebase.json'
+    #   - '.github/workflows/functions-deploy.yml'
+  workflow_dispatch:{}
 
 concurrency:
   group: functions-deploy-main
