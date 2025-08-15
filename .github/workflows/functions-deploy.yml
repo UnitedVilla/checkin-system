@@ -8,7 +8,7 @@ on:
     #   - 'firebase.json'
     #   - '.github/workflows/functions-deploy.yml'
   workflow_dispatch:
-
+  
 concurrency:
   group: functions-deploy-main
   cancel-in-progress: true
