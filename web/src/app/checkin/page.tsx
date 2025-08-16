@@ -83,36 +83,50 @@ export default function CheckinPage() {
   }
 
   async function upload() {
-    try {
-      if (!session) return;
-      setBusy(true);
-      // 必要枚数を下回ると Functions 側で 400 になる点に注意
-      const chosen = files;
-      const uploadedPaths: string[] = [];
-      for (let i = 0; i < chosen.length; i++) {
-        const f = chosen[i];
-        const safe = (f.name || 'photo.jpg').replace(/[^a-zA-Z0-9._-]/g, '');
-        const path = `${session.uploadBasePath}${Date.now()}_${i}_${safe}`;
-        await uploadBytes(ref(storage, path), f, { contentType: f.type });
-        uploadedPaths.push(path);
-      }
-      const res2 = await fetch(`${API}/uploadPhotos`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ sessionId: session.sessionId, uploadedPaths }),
-      });
-      const text2 = await res2.text();
-      let json2: any;
-      try { json2 = JSON.parse(text2); } catch { throw new Error(text2); }
-      if (!res2.ok) throw new Error(json2?.detail || text2);
-      setResult(json2);
-    } catch (e: any) {
-      alert(`アップロードに失敗: ${e.message || e}`);
-    } finally {
-      setBusy(false);
+  if (!session) return;
+  setBusy(true);
+
+  // 8MB制限のルールに合わせ、サイズチェックも事前に
+  const MAX = 8 * 1024 * 1024;
+
+  const chosen = files.slice(0, Math.max(2, files.length));
+  const uploadedPaths:string[] = [];
+
+  for (let i=0; i<chosen.length; i++) {
+    const f = chosen[i];
+
+    // 画像MIMEでない/サイズ超過は弾く
+    if (!/^image\//.test(f.type)) {
+      alert(`画像ではないファイルが含まれています: ${f.name}`);
+      setBusy(false); return;
     }
+    if (f.size > MAX) {
+      alert(`画像サイズが大きすぎます（${(f.size/1024/1024).toFixed(1)}MB）。8MB以下にしてください: ${f.name}`);
+      setBusy(false); return;
+    }
+
+    // ファイル名は拡張子をMIMEから決定
+    const ext = f.type.includes('png') ? 'png'
+              : f.type.includes('webp') ? 'webp'
+              : 'jpg';
+    // 好みで固定名でもOK
+    const filename = i === 0 ? `face-1.${ext}` : `passport-1.${ext}`;
+    const path = `${session.uploadBasePath}${filename}`;
+
+    await uploadBytes(ref(storage, path), f, { contentType: f.type }); // ★ここ重要
+    uploadedPaths.push(path);
   }
 
+  const res2 = await fetch(`${API}/uploadPhotos`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ sessionId: session.sessionId, uploadedPaths }),
+  });
+  const json2 = await res2.json();
+  setResult(json2);
+  setBusy(false);
+  }
+  
   return (
     <main className="p-6 space-y-5 max-w-xl mx-auto">
       <h1 className="text-xl font-bold">オンラインチェックイン</h1>
