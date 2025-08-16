@@ -59,72 +59,64 @@ export default function CheckinPage() {
   }
 
   async function start() {
-    try {
-      ensureApi();
-      if (!reservationId) return alert('先に予約を選択してください');
-      setBusy(true);
-      const res = await fetch(`${API}/startCheckin`, {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify({ reservationId }),
-      });
-      const text = await res.text();
-      let s: any;
-      try { s = JSON.parse(text); } catch { throw new Error(text); }
-      if (!res.ok) throw new Error(s?.detail || text);
-      if (!s.sessionId || !s.customToken) throw new Error('無効なレスポンス');
-      await signInWithCustomToken(auth, s.customToken); // uid=sessionId で一時ログイン
-      setSession(s);
-    } catch (e: any) {
-      alert(`チェックイン開始に失敗: ${e.message || e}`);
-    } finally {
-      setBusy(false);
-    }
+    if (!reservationId) return alert('先に予約照合してください');
+    setBusy(true);
+    const res = await fetch(`${API}/startCheckin`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ reservationId })
+    });
+    const s = await res.json();
+    if (!s.sessionId || !s.customToken) { alert('開始に失敗'); setBusy(false); return; }
+
+    // ★ 確実にサインイン反映を待つ
+    await signInWithCustomToken(auth, s.customToken);
+    await auth.currentUser?.getIdToken(true); // トークン取得でレースを避ける
+
+    setSession(s);
+    setBusy(false);
   }
 
   async function upload() {
-  if (!session) return;
-  setBusy(true);
+    if (!session) return;
+    setBusy(true);
 
-  // 8MB制限のルールに合わせ、サイズチェックも事前に
-  const MAX = 8 * 1024 * 1024;
+    // 8MB 制限に合わせたクライアントチェック
+    const MAX = 8 * 1024 * 1024;
 
-  const chosen = files.slice(0, Math.max(2, files.length));
-  const uploadedPaths:string[] = [];
+    const chosen = files.slice(0, Math.max(2, files.length));
+    const uploadedPaths: string[] = [];
 
-  for (let i=0; i<chosen.length; i++) {
-    const f = chosen[i];
+    for (let i = 0; i < chosen.length; i++) {
+      const f = chosen[i];
 
-    // 画像MIMEでない/サイズ超過は弾く
-    if (!/^image\//.test(f.type)) {
-      alert(`画像ではないファイルが含まれています: ${f.name}`);
-      setBusy(false); return;
+      if (!/^image\//.test(f.type)) {
+        alert(`画像ではないファイルが含まれています: ${f.name}`);
+        setBusy(false); return;
+      }
+      if (f.size > MAX) {
+        alert(`画像サイズが大きすぎます（${(f.size/1024/1024).toFixed(1)}MB）。8MB以下にしてください: ${f.name}`);
+        setBusy(false); return;
+      }
+
+      const ext = f.type.includes('png') ? 'png'
+                : f.type.includes('webp') ? 'webp'
+                : 'jpg';
+      const filename = i === 0 ? `face-1.${ext}` : `passport-1.${ext}`;
+      const path = `${session.uploadBasePath}${filename}`;
+
+      // ★ MIME を明示
+      await uploadBytes(ref(storage, path), f, { contentType: f.type });
+      uploadedPaths.push(path);
     }
-    if (f.size > MAX) {
-      alert(`画像サイズが大きすぎます（${(f.size/1024/1024).toFixed(1)}MB）。8MB以下にしてください: ${f.name}`);
-      setBusy(false); return;
-    }
 
-    // ファイル名は拡張子をMIMEから決定
-    const ext = f.type.includes('png') ? 'png'
-              : f.type.includes('webp') ? 'webp'
-              : 'jpg';
-    // 好みで固定名でもOK
-    const filename = i === 0 ? `face-1.${ext}` : `passport-1.${ext}`;
-    const path = `${session.uploadBasePath}${filename}`;
-
-    await uploadBytes(ref(storage, path), f, { contentType: f.type }); // ★ここ重要
-    uploadedPaths.push(path);
-  }
-
-  const res2 = await fetch(`${API}/uploadPhotos`, {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ sessionId: session.sessionId, uploadedPaths }),
-  });
-  const json2 = await res2.json();
-  setResult(json2);
-  setBusy(false);
+    const res2 = await fetch(`${API}/uploadPhotos`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ sessionId: session.sessionId, uploadedPaths })
+    });
+    const json2 = await res2.json();
+    setResult(json2);
+    setBusy(false);
   }
   
   return (
