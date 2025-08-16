@@ -71,6 +71,9 @@ export default function CheckinPage() {
     // ★ 確実にサインイン反映を待つ
     await signInWithCustomToken(auth, s.customToken);
     await auth.currentUser?.getIdToken(true); // トークン取得でレースを避ける
+    const ok = auth.currentUser?.uid === s.sessionId;
+    console.log('[checkin] uid === sessionId ?', ok, { uid: auth.currentUser?.uid, sessionId: s.sessionId });
+    (window as any).__SESSION_DEBUG__ = { uid: auth.currentUser?.uid, sessionId: s.sessionId };
 
     setSession(s);
     setBusy(false);
