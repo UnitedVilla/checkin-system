@@ -13,19 +13,28 @@ type WebConfig = {
 
 // バケット名を gs:// に正規化
 function toGsBucket(input: string): string {
-  let b = (input || '').trim();
+  const b = (input || '').trim();
   if (!b) return '';
+
+  // すでに gs:// の場合はそのまま
   if (b.startsWith('gs://')) return b;
+
+  // 正しい新ドメインはそのまま gs に
   if (b.endsWith('.firebasestorage.app')) {
-    const projectId = b.split('.')[0];
-    return `gs://${projectId}.appspot.com`;
+    return `gs://${b}`;
   }
-  if (b.endsWith('.appspot.com')) return `gs://${b}`;
-  return `gs://${b}.appspot.com`;
+
+  // 旧ドメインもサポート（必要ならこちらを使う環境もあるため）
+  if (b.endsWith('.appspot.com')) {
+    return `gs://${b}`;
+  }
+
+  // ドメインが無い（projectId だけ）の場合は新ドメインを既定に
+  return `gs://${b}.firebasestorage.app`;
 }
 
 // 1) NEXT_PUBLIC_* が全部あるならそれを採用
-// 2) 無ければ FIREBASE_WEBAPP_CONFIG(JSON) を採用
+// 2) 無ければ FIREBASE_WEBAPP_CONFIG(JSON) を採用（Firebase App Hosting で付与される）
 function readConfig(): WebConfig | null {
   const pub = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -37,6 +46,7 @@ function readConfig(): WebConfig | null {
   if (Object.values(pub).every(Boolean)) {
     return pub as WebConfig;
   }
+
   const raw = process.env.FIREBASE_WEBAPP_CONFIG;
   if (raw) {
     try {
@@ -45,17 +55,17 @@ function readConfig(): WebConfig | null {
         apiKey: j.apiKey,
         authDomain: j.authDomain,
         projectId: j.projectId,
-        storageBucket: j.storageBucket || `${j.projectId}.appspot.com`,
+        storageBucket: j.storageBucket || `${j.projectId}.firebasestorage.app`,
         appId: j.appId,
       };
     } catch {
-      // noop
+      // 無視（fallback なし）
     }
   }
   return null;
 }
 
-// ---- 遅延初期化（import 時に throw しない！）----
+// ---- 遅延初期化（import 時に throw しない）----
 let cachedApp: ReturnType<typeof initializeApp> | null = null;
 let cachedCfg: WebConfig | null = null;
 
@@ -76,8 +86,13 @@ export function getFirebaseAuth() {
 }
 
 export function getFirebaseStorage() {
-  const cfg = cachedCfg ?? readConfig();
+  if (!cachedCfg) cachedCfg = readConfig();
   const app = ensureFirebaseApp();
-  const bucket = toGsBucket(cfg?.storageBucket || '');
-  return bucket ? getStorage(app, bucket) : getStorage(app);
+  const bucketUrl = toGsBucket(cachedCfg?.storageBucket || '');
+  // bucketUrl を明示して、b= が firebasestorage.app になるように固定
+  return bucketUrl ? getStorage(app, bucketUrl) : getStorage(app);
 }
+
+// --- 使い勝手用のシングルトンもエクスポート ---
+export const auth = getFirebaseAuth();
+export const storage = getFirebaseStorage();
