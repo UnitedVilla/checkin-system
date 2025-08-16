@@ -10,11 +10,11 @@ function req(v: Env, name: string): string {
 }
 
 /**
- * さまざまな入力形式を Storage の正式バケット URL に正規化します。
- * - "online-check-in-23087.appspot.com"   -> "gs://online-check-in-23087.appspot.com"
- * - "gs://online-check-in-23087.appspot.com" -> そのまま
- * - "online-check-in-23087"                -> "gs://online-check-in-23087.appspot.com"
- * - "online-check-in-23087.firebasestorage.app" -> "gs://online-check-in-23087.appspot.com"
+ * 入力を Storage の正式バケット URL に正規化します。
+ * - "online-check-in-23087.appspot.com"            -> "gs://online-check-in-23087.appspot.com"
+ * - "gs://online-check-in-23087.appspot.com"       -> そのまま
+ * - "online-check-in-23087"                        -> "gs://online-check-in-23087.appspot.com"
+ * - "online-check-in-23087.firebasestorage.app"    -> "gs://online-check-in-23087.appspot.com"
  */
 function toGsBucket(input: string): string {
   let b = input.trim();
@@ -22,16 +22,16 @@ function toGsBucket(input: string): string {
   // すでに gs:// ならそのまま
   if (b.startsWith('gs://')) return b;
 
-  // firebasestorage.app を誤って入れた場合は projectId に変換
+  // firebasestorage.app を入れた場合は projectId を抽出して appspot.com に寄せる
   if (b.endsWith('.firebasestorage.app')) {
-    const projectId = b.split('.')[0];
+    const projectId = b.split('.')[0]; // 先頭ラベル=projectId
     return `gs://${projectId}.appspot.com`;
   }
 
-  // appspot.com が付いていれば gs:// を付ける
+  // すでに appspot.com なら gs:// を付ける
   if (b.endsWith('.appspot.com')) return `gs://${b}`;
 
-  // projectId だけの場合は appspot.com を付与
+  // projectId のみ指定された場合
   return `gs://${b}.appspot.com`;
 }
 
@@ -45,9 +45,17 @@ const config = {
 
 const app = getApps().length ? getApp() : initializeApp(config);
 
-export const auth = getAuth(app);
-// どの形式でも正しいバケットを指すように正規化
-export const storage = getStorage(app, toGsBucket(config.storageBucket));
+// ★ フォールバックを避けるため、必ず gs://<bucket> を明示
+const gsBucket = toGsBucket(config.storageBucket);
 
-// （必要なら他モジュール用にエクスポート）
+export const auth = getAuth(app);
+export const storage = getStorage(app, gsBucket);
+
+// デバッグ: 実際にどこへ向くか確認（開発時のみ）
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  console.log('[firebase] storageBucket from config:', (getApp().options?.storageBucket ?? '(none)'));
+  console.log('[firebase] storage forced bucket:', gsBucket);
+}
+
+// 他で使いたい場合に備えて export
 export { app as firebaseApp };
