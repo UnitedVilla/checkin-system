@@ -1,6 +1,7 @@
 // web/src/app/[locale]/layout.tsx
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales } from '@/i18n';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -11,15 +12,21 @@ export function generateStaticParams() {
 
 type Props = {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
 
-export default async function LocaleLayout({ children, params: { locale } }: Props) {
+export default async function LocaleLayout({ children, params }: Props) {
+  // paramsを非同期で取得
+  const { locale } = await params;
+  
   // 対応していない言語は404
   if (!locales.includes(locale as any)) {
     notFound();
   }
 
+  // 静的レンダリングを有効にする
+  setRequestLocale(locale);
+  
   const messages = await getMessages();
 
   return (

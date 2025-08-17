@@ -6,7 +6,6 @@ import { Globe } from 'lucide-react';
 import { locales } from '@/i18n';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import Link from 'next/link';
 
 const LanguageSwitcher = () => {
   const t = useTranslations('languages');
@@ -14,10 +13,13 @@ const LanguageSwitcher = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  const getLocalizedPath = (newLocale: string) => {
+  const handleLanguageChange = (newLocale: string) => {
     const segments = pathname.split('/');
     segments[1] = newLocale; // [locale]の部分を置換
-    return segments.join('/');
+    const newPath = segments.join('/');
+    // ページ遷移
+    window.location.href = newPath;
+    setIsOpen(false);
   };
 
   return (
@@ -55,29 +57,28 @@ const LanguageSwitcher = () => {
             >
               <div className="py-2">
                 {locales.map((lang) => (
-                  <Link key={lang} href={getLocalizedPath(lang)}>
-                    <motion.div
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors duration-200 cursor-pointer ${
-                        locale === lang
-                          ? 'bg-wa-primary-50 text-wa-primary-700 font-medium'
-                          : 'text-wa-neutral-700 hover:bg-wa-neutral-50'
-                      }`}
-                      whileHover={{ x: 4 }}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{t(lang as any)}</span>
-                        {locale === lang && (
-                          <motion.div
-                            className="w-2 h-2 bg-wa-primary-500 rounded-full"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.1 }}
-                          />
-                        )}
-                      </div>
-                    </motion.div>
-                  </Link>
+                  <motion.button
+                    key={lang}
+                    onClick={() => handleLanguageChange(lang)}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${
+                      locale === lang
+                        ? 'bg-wa-primary-50 text-wa-primary-700 font-medium'
+                        : 'text-wa-neutral-700 hover:bg-wa-neutral-50'
+                    }`}
+                    whileHover={{ x: 4 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{t(lang as any)}</span>
+                      {locale === lang && (
+                        <motion.div
+                          className="w-2 h-2 bg-wa-primary-500 rounded-full"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.1 }}
+                        />
+                      )}
+                    </div>
+                  </motion.button>
                 ))}
               </div>
             </motion.div>

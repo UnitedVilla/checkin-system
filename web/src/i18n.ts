@@ -6,11 +6,15 @@ import { getRequestConfig } from 'next-intl/server';
 export const locales = ['en', 'ja', 'zh', 'ko'] as const;
 export type Locale = typeof locales[number];
 
-export default getRequestConfig(async ({ locale }) => {
+export default getRequestConfig(async ({ requestLocale }) => {
+  // requestLocaleを使用（新しいAPI）
+  const locale = await requestLocale;
+  
   // 対応していない言語の場合は404
-  if (!locales.includes(locale as any)) notFound();
+  if (!locale || !locales.includes(locale as any)) notFound();
 
   return {
+    locale,
     messages: (await import(`./messages/${locale}.json`)).default
   };
 });
