@@ -1,0 +1,65 @@
+{
+  "common": {
+    "title": "온라인 체크인 시스템",
+    "next": "다음",
+    "back": "뒤로",
+    "cancel": "취소",
+    "complete": "완료",
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "ko": "한국어"
+  },
+  "home": {
+    "title": "체크인 시스템에 오신 것을 환영합니다",
+    "subtitle": "체크인 절차를 시작해 주세요",
+    "startCheckin": "체크인 시작",
+    "description": "고객을 위한 원활한 디지털 체크인 경험"
+  },
+  "search": {
+    "title": "예약 검색",
+    "checkInDate": "체크인 날짜",
+    "guestName": "대표 고객 이름",
+    "guestNamePlaceholder": "김철수",
+    "searchButton": "예약 검색",
+    "noReservationFound": "해당 예약을 찾을 수 없습니다",
+    "reservationFound": "{count}개의 예약을 찾았습니다"
+  },
+  "select": {
+    "title": "예약 선택",
+    "guestCount": "{count}명",
+    "room": "방 {number}",
+    "confirmButton": "예약 확인"
+  },
+  "upload": {
+    "title": "서류 업로드",
+    "instruction": "다음 서류를 업로드해 주세요:",
+    "facePhoto": "얼굴 사진",
+    "passportPhoto": "여권/신분증 사진",
+    "selectFiles": "파일 선택",
+    "filesSelected": "{count}개 파일 선택됨",
+    "uploadButton": "업로드 및 완료",
+    "sessionId": "세션 ID: {id}",
+    "expectedUploads": "필요한 파일 수: {count}"
+  },
+  "result": {
+    "title": "체크인 완료",
+    "success": "체크인이 성공적으로 완료되었습니다!",
+    "roomNumber": "방 번호",
+    "passcode": "방 비밀번호",
+    "important": "이 정보를 저장해 주세요",
+    "newCheckin": "새 체크인"
+  },
+  "errors": {
+    "searchFailed": "검색 실패: {message}",
+    "invalidFile": "이미지가 아닌 파일이 포함되어 있습니다: {filename}",
+    "fileTooLarge": "이미지 크기가 너무 큽니다({size}MB). 8MB 이하로 해주세요: {filename}",
+    "uploadFailed": "업로드 실패: {message}",
+    "sessionRequired": "먼저 체크인을 시작해 주세요",
+    "apiNotConfigured": "NEXT_PUBLIC_API_BASE가 설정되지 않았습니다"
+  }
+}

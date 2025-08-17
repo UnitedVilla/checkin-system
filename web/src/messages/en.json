@@ -1,0 +1,65 @@
+{
+  "common": {
+    "title": "Online Check-in System",
+    "next": "Next",
+    "back": "Back",
+    "cancel": "Cancel",
+    "complete": "Complete",
+    "loading": "Loading...",
+    "error": "Error occurred"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "ko": "한국어"
+  },
+  "home": {
+    "title": "Welcome to Check-in System",
+    "subtitle": "Please proceed with your check-in process",
+    "startCheckin": "Start Check-in",
+    "description": "A seamless digital check-in experience for our guests"
+  },
+  "search": {
+    "title": "Search Reservation",
+    "checkInDate": "Check-in Date",
+    "guestName": "Representative Guest Name",
+    "guestNamePlaceholder": "John Smith",
+    "searchButton": "Search Reservation",
+    "noReservationFound": "No reservation found",
+    "reservationFound": "{count} reservation(s) found"
+  },
+  "select": {
+    "title": "Select Your Reservation",
+    "guestCount": "{count} guest(s)",
+    "room": "Room {number}",
+    "confirmButton": "Confirm Reservation"
+  },
+  "upload": {
+    "title": "Upload Documents",
+    "instruction": "Please upload the following documents:",
+    "facePhoto": "Face Photo",
+    "passportPhoto": "Passport/ID Photo",
+    "selectFiles": "Select Files",
+    "filesSelected": "{count} file(s) selected",
+    "uploadButton": "Upload & Complete",
+    "sessionId": "Session ID: {id}",
+    "expectedUploads": "Required files: {count}"
+  },
+  "result": {
+    "title": "Check-in Complete",
+    "success": "Your check-in has been completed successfully!",
+    "roomNumber": "Room Number",
+    "passcode": "Room Passcode",
+    "important": "Please save this information",
+    "newCheckin": "New Check-in"
+  },
+  "errors": {
+    "searchFailed": "Search failed: {message}",
+    "invalidFile": "Invalid file type: {filename}",
+    "fileTooLarge": "File too large ({size}MB). Please use files under 8MB: {filename}",
+    "uploadFailed": "Upload failed: {message}",
+    "sessionRequired": "Please start check-in process first",
+    "apiNotConfigured": "NEXT_PUBLIC_API_BASE is not configured"
+  }
+}

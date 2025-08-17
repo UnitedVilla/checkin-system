@@ -1,1 +1,138 @@
-@tailwind base;@tailwind components;@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Noto Sans JP', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-wa-gradient text-wa-neutral-800 antialiased;
+    line-height: 1.7;
+  }
+  
+  /* 日本語フォントの改善 */
+  [lang="ja"] {
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  
+  /* セレクション時の色 */
+  ::selection {
+    @apply bg-wa-accent-200 text-wa-accent-800;
+  }
+}
+
+@layer components {
+  /* 和モダンボタンスタイル */
+  .btn-wa-primary {
+    @apply bg-wa-primary-500 hover:bg-wa-primary-600 text-white px-6 py-3 rounded-wa
+           transition-all duration-300 ease-out transform hover:scale-105 hover:shadow-wa-medium
+           font-medium tracking-wide;
+  }
+  
+  .btn-wa-secondary {
+    @apply bg-wa-secondary-500 hover:bg-wa-secondary-600 text-white px-6 py-3 rounded-wa
+           transition-all duration-300 ease-out transform hover:scale-105 hover:shadow-wa-medium
+           font-medium tracking-wide;
+  }
+  
+  .btn-wa-accent {
+    @apply bg-wa-accent-500 hover:bg-wa-accent-600 text-white px-6 py-3 rounded-wa
+           transition-all duration-300 ease-out transform hover:scale-105 hover:shadow-wa-medium
+           font-medium tracking-wide;
+  }
+  
+  .btn-wa-outline {
+    @apply border-2 border-wa-primary-500 text-wa-primary-500 hover:bg-wa-primary-500 
+           hover:text-white px-6 py-3 rounded-wa transition-all duration-300 ease-out
+           transform hover:scale-105 font-medium tracking-wide;
+  }
+  
+  /* 和モダンカードスタイル */
+  .card-wa {
+    @apply bg-white/80 backdrop-blur-sm rounded-wa-lg shadow-wa-soft border border-wa-neutral-200
+           transition-all duration-300 hover:shadow-wa-medium hover:border-wa-neutral-300;
+  }
+  
+  /* 和モダン入力フィールド */
+  .input-wa {
+    @apply w-full px-4 py-3 bg-white/90 border border-wa-neutral-300 rounded-wa
+           focus:ring-2 focus:ring-wa-primary-400 focus:border-wa-primary-400
+           transition-all duration-200 placeholder-wa-neutral-400
+           hover:border-wa-neutral-400 backdrop-blur-sm;
+  }
+  
+  /* 言語選択ボタン */
+  .lang-btn {
+    @apply px-3 py-2 text-sm rounded-lg transition-all duration-200
+           bg-white/60 hover:bg-white/80 text-wa-neutral-700 hover:text-wa-primary-600
+           border border-wa-neutral-200 hover:border-wa-primary-300
+           backdrop-blur-sm font-medium;
+  }
+  
+  .lang-btn.active {
+    @apply bg-wa-primary-500 text-white border-wa-primary-500 shadow-wa-soft;
+  }
+  
+  /* ステップインジケーター */
+  .step-indicator {
+    @apply flex items-center justify-center w-10 h-10 rounded-full
+           border-2 transition-all duration-300 font-semibold text-sm;
+  }
+  
+  .step-indicator.active {
+    @apply bg-wa-primary-500 border-wa-primary-500 text-white shadow-wa-soft;
+  }
+  
+  .step-indicator.completed {
+    @apply bg-wa-accent-500 border-wa-accent-500 text-white;
+  }
+  
+  .step-indicator.inactive {
+    @apply bg-white border-wa-neutral-300 text-wa-neutral-400;
+  }
+  
+  /* アニメーション効果 */
+  .wa-animate-in {
+    @apply animate-slide-up;
+  }
+  
+  .wa-fade-in {
+    @apply animate-fade-in;
+  }
+  
+  .wa-scale-in {
+    @apply animate-scale-in;
+  }
+  
+  /* 美しいグラデーション背景 */
+  .wa-bg-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(248, 246, 243, 0.8) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(232, 236, 241, 0.6) 0%, transparent 50%),
+      radial-gradient(circle at 50% 100%, rgba(254, 247, 240, 0.4) 0%, transparent 50%);
+  }
+  
+  /* ローディングアニメーション */
+  .wa-loading {
+    @apply relative overflow-hidden;
+  }
+  
+  .wa-loading::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-full bg-shimmer-gradient;
+    animation: shimmer 2s infinite;
+  }
+  
+  /* 特殊エフェクト */
+  .wa-glass {
+    @apply bg-white/20 backdrop-blur-md border border-white/30;
+  }
+  
+  .wa-shadow-glow {
+    box-shadow: 0 0 20px rgba(166, 130, 92, 0.3);
+  }
+}

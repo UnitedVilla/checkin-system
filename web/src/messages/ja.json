@@ -1,0 +1,65 @@
+{
+  "common": {
+    "title": "オンラインチェックインシステム",
+    "next": "次へ",
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "complete": "完了",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました"
+  },
+  "languages": {
+    "en": "English",
+    "ja": "日本語",
+    "zh": "中文",
+    "ko": "한국어"
+  },
+  "home": {
+    "title": "チェックインシステムへようこそ",
+    "subtitle": "チェックイン手続きを開始してください",
+    "startCheckin": "チェックイン開始",
+    "description": "お客様のためのシームレスなデジタルチェックイン体験"
+  },
+  "search": {
+    "title": "予約検索",
+    "checkInDate": "チェックイン日",
+    "guestName": "代表者氏名",
+    "guestNamePlaceholder": "山田太郎",
+    "searchButton": "予約照合",
+    "noReservationFound": "該当の予約が見つかりません",
+    "reservationFound": "{count}件の予約が見つかりました"
+  },
+  "select": {
+    "title": "予約選択",
+    "guestCount": "{count}名",
+    "room": "部屋{number}",
+    "confirmButton": "予約確定"
+  },
+  "upload": {
+    "title": "書類アップロード",
+    "instruction": "以下の書類をアップロードしてください：",
+    "facePhoto": "顔写真",
+    "passportPhoto": "パスポート・身分証明書",
+    "selectFiles": "ファイル選択",
+    "filesSelected": "{count}ファイル選択済み",
+    "uploadButton": "アップロードして完了",
+    "sessionId": "セッションID: {id}",
+    "expectedUploads": "必要ファイル数: {count}"
+  },
+  "result": {
+    "title": "チェックイン完了",
+    "success": "チェックインが正常に完了しました！",
+    "roomNumber": "部屋番号",
+    "passcode": "部屋のパスコード",
+    "important": "この情報を保存してください",
+    "newCheckin": "新しいチェックイン"
+  },
+  "errors": {
+    "searchFailed": "検索に失敗: {message}",
+    "invalidFile": "画像ではないファイルが含まれています: {filename}",
+    "fileTooLarge": "画像サイズが大きすぎます（{size}MB）。8MB以下にしてください: {filename}",
+    "uploadFailed": "アップロードに失敗: {message}",
+    "sessionRequired": "先にチェックイン開始してください",
+    "apiNotConfigured": "NEXT_PUBLIC_API_BASEが未設定です"
+  }
+}
