@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Camera, Upload, FileImage, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { Camera, Upload, FileImage, ArrowLeft, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { signInWithCustomToken } from 'firebase/auth';
 import { ref, uploadBytes } from 'firebase/storage';
@@ -85,7 +85,16 @@ function UploadContent() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    setFiles(selectedFiles);
+    if (selectedFiles.length > 0) {
+      // 既存のファイルに新しいファイルを追加
+      setFiles(prevFiles => [...prevFiles, ...selectedFiles]);
+    }
+    // input要素をリセットして同じファイルでも再選択できるようにする
+    e.target.value = '';
+  };
+
+  const removeFile = (indexToRemove: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, index) => index !== indexToRemove));
   };
 
   const handleUpload = async () => {
@@ -156,6 +165,9 @@ function UploadContent() {
       setUploadProgress(0);
     }
   };
+
+  // 必要な写真枚数をチェック
+  const isPhotosComplete = session ? files.length >= session.expectedUploads : false;
 
   if (!reservationInfo) {
     return (
@@ -262,11 +274,21 @@ function UploadContent() {
             transition={{ duration: 0.6 }}
             className="space-y-6"
           >
-            {/* セッション情報 */}
+            {/* セッション情報と進捗 */}
             <div className="card-wa p-4 bg-wa-gradient-warm">
-              <div className="text-sm">
-                <div className="text-wa-neutral-600">{t('upload.sessionId', { id: session.sessionId })}</div>
-                <div className="text-wa-neutral-600">{t('upload.expectedUploads', { count: session.expectedUploads })}</div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm">
+                  <div className="text-wa-neutral-600">{t('upload.sessionId', { id: session.sessionId })}</div>
+                  <div className="text-wa-neutral-600">
+                    写真進捗: {files.length} / {session.expectedUploads}
+                  </div>
+                </div>
+                {isPhotosComplete && (
+                  <div className="flex items-center space-x-1 text-green-600">
+                    <CheckCircle size={16} />
+                    <span className="text-sm font-medium">完了</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -301,7 +323,7 @@ function UploadContent() {
                 <div className="border-2 border-dashed border-wa-neutral-300 rounded-wa-lg p-8 text-center hover:border-wa-primary-400 transition-colors cursor-pointer">
                   <FileImage className="w-12 h-12 text-wa-neutral-400 mx-auto mb-4" />
                   <div className="text-lg font-medium text-wa-neutral-700 mb-2">
-                    {t('upload.selectFiles')}
+                    写真を追加撮影
                   </div>
                   <div className="text-sm text-wa-neutral-500">
                     JPG, PNG, WEBP (最大8MB)
@@ -323,17 +345,39 @@ function UploadContent() {
                   animate={{ opacity: 1, height: 'auto' }}
                   className="mt-4"
                 >
-                  <div className="text-sm text-wa-neutral-600 mb-2">
-                    {t('upload.filesSelected', { count: files.length })}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-sm text-wa-neutral-600">
+                      選択された写真: {files.length}枚
+                    </div>
+                    {isPhotosComplete && (
+                      <div className="text-xs text-green-600 font-medium">
+                        必要枚数達成！
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     {files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-wa-neutral-50 rounded">
-                        <span className="text-sm truncate">{file.name}</span>
-                        <span className="text-xs text-wa-neutral-500">
-                          {(file.size / 1024 / 1024).toFixed(1)}MB
-                        </span>
-                      </div>
+                      <motion.div 
+                        key={`${file.name}-${index}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="flex items-center justify-between p-3 bg-wa-neutral-50 rounded border"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{file.name}</div>
+                          <div className="text-xs text-wa-neutral-500">
+                            {(file.size / 1024 / 1024).toFixed(1)}MB
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="ml-2 p-1 text-wa-neutral-400 hover:text-red-500 transition-colors"
+                          title="削除"
+                        >
+                          <X size={16} />
+                        </button>
+                      </motion.div>
                     ))}
                   </div>
                 </motion.div>
@@ -344,7 +388,11 @@ function UploadContent() {
             <motion.button
               onClick={handleUpload}
               disabled={files.length === 0 || isUploading}
-              className="w-full btn-wa-accent py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                isPhotosComplete 
+                  ? 'btn-wa-primary' 
+                  : 'btn-wa-accent'
+              }`}
               whileHover={{ scale: files.length === 0 || isUploading ? 1 : 1.02 }}
               whileTap={{ scale: files.length === 0 || isUploading ? 1 : 0.98 }}
             >
@@ -366,7 +414,14 @@ function UploadContent() {
               ) : (
                 <div className="flex items-center justify-center space-x-2">
                   <Upload size={20} />
-                  <span>{t('upload.uploadButton')}</span>
+                  <span>
+                    {files.length === 0 
+                      ? '写真を選択してください' 
+                      : isPhotosComplete 
+                        ? 'アップロード完了'
+                        : `アップロード (${files.length}枚)`
+                    }
+                  </span>
                 </div>
               )}
             </motion.button>
@@ -409,6 +464,7 @@ function UploadContent() {
                 <li>写真は鮮明で、顔がはっきりと見えるものをご使用ください</li>
                 <li>身分証明書は文字が読み取れる解像度でお撮りください</li>
                 <li>ファイルサイズは8MB以下にしてください</li>
+                <li>不要な写真は×ボタンで削除できます</li>
                 <li>アップロード完了まで画面を閉じないでください</li>
               </ul>
             </div>
